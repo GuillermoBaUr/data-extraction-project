@@ -85,53 +85,61 @@ def extraer_encabezado(doc: Document) -> dict:
                         datos["Revisión"] = match.group(1)
 
     # Docente, Asignatura y Estudiantes en párrafos de texto libre
-    # Flag para el caso donde DOCENTE: está vacío y el nombre va en el siguiente párrafo
     esperando_nombre_docente = False
+    texto_anterior = ""  # ← NUEVO: guarda el párrafo previo
 
     for parrafo in doc.paragraphs:
         texto = parrafo.text
         if not texto.strip():
-            continue
-
-        # Si el párrafo anterior tenía DOCENTE: vacío, este párrafo es el nombre
-        if esperando_nombre_docente and not re.search(r"ASIGNATURA|DEPARTAMENTO|CANTIDAD", texto, re.IGNORECASE):
-            val = re.sub(r"\s{2,}", " ", texto.strip().strip("_").strip())
-            if not es_placeholder(val):
-                datos["Docente"] = val
-            esperando_nombre_docente = False
+            texto_anterior = ""
             continue
 
         if not datos["Docente"]:
-            # Salta guiones bajos iniciales después de ':', acepta espacio antes de ':'
-            m = re.search(r"DOCENTE\s*:\s*_*\s*(?P<name>[^_\n\r\t]+?)(?=_{2,}|\s*$)", texto, re.IGNORECASE)
-            if re.search(r"DOCENTE\s*:", texto, re.IGNORECASE):
+            texto_combinado = texto_anterior + texto  # ← NUEVO
+
+            # Caso 1: DOCENTE completo en el párrafo actual (comportamiento original)
+            if re.search(r"DOCENTE\s*:?", texto, re.IGNORECASE):
+                m = re.search(r"DOCENTE\s*:?\s*_*\s*(?P<name>[^_\n\r\t]+?)(?=_+|\s*$)", texto, re.IGNORECASE)
                 if m and m.group("name").strip():
                     val = re.sub(r"\s{2,}", " ", m.group("name").strip())
                     if not es_placeholder(val):
-                        datos["Docente"] = val
+                        datos["Docente"] = val.upper()
                 else:
-                    esperando_nombre_docente = True  # nombre en el siguiente párrafo
+                    esperando_nombre_docente = True
+
+            # Caso 2: DOCENTE partido entre párrafos (ej: "...DO" / "CENTE : NOMBRE")
+            elif re.search(r"DOCENTE\s*:?:", texto_combinado, re.IGNORECASE):
+                m2 = re.search(r"DOCENTE\s*:?\s*_*\s*(?P<name>[^_\n\r\t]+?)(?=_+|\s*$)", texto_combinado, re.IGNORECASE)
+                if m2 and m2.group("name").strip():
+                    val = re.sub(r"\s{2,}", " ", m2.group("name").strip())
+                    if not es_placeholder(val):
+                        datos["Docente"] = val.upper()
+
+            # Caso 3: nombre en párrafo siguiente (flag del ciclo anterior)
+            elif esperando_nombre_docente and not re.search(r"ASIGNATURA|DEPARTAMENTO|CANTIDAD", texto, re.IGNORECASE):
+                val = re.sub(r"\s{2,}", " ", texto.strip().strip("_").strip())
+                if not es_placeholder(val):
+                    datos["Docente"] = val
+                esperando_nombre_docente = False
 
         if not datos["Asignatura"]:
-            # Captura todo el texto entre 'ASIGNATURA' y 'CANTIDAD'
             m = re.search(r"ASIGNATURA(?:\s+Y\s+GRUPO)?\s*:\s*(?P<name>.+?)(?=CANTIDAD|\s{5,}|$)", texto, re.IGNORECASE)
             if m:
-                # Limpiamos guiones bajos, comillas raras y espacios extra
                 val = m.group("name").replace("_", " ").strip()
-                val = re.sub(r"\s{2,}", " ", val)  # Normaliza espacios
+                val = re.sub(r"\s{2,}", " ", val)
                 if not es_placeholder(val):
-                    datos["Asignatura"] = val
+                    datos["Asignatura"] = val.upper()
 
         if not datos["Cantidad De Estudiantes Inscritos"]:
-            # Captura solo dígitos, ignora guiones bajos al final
             m = re.search(r"CANTIDAD\s+DE\s+ESTUDIANTES?\s+INSCRITOS?[:\s]+(?:\(\d+\))?[\s_]*(?P<num>\d+)", texto, re.IGNORECASE)
             if m:
                 val = m.group(1)
                 if not es_placeholder(val):
                     datos["Cantidad De Estudiantes Inscritos"] = val
 
-    return datos
+        texto_anterior = texto  # ← NUEVO: actualiza para el siguiente ciclo
 
+    return datos
 
 # ---------------------------------------------------------------------------
 # Extracción de la tabla de seguimiento
@@ -174,7 +182,9 @@ def fila_es_dato(celdas: list) -> bool:
     # Pero evitamos que sea solo la palabra "UNIDADES" (que ya filtramos arriba)
     es_palabra_unidad = unidad.startswith("UNIDAD") and "UNIDADES" not in unidad
 
-    return es_romano_valido or es_digito_valido or es_palabra_unidad
+    es_tema = bool(re.match(r"^TEMA\s+[IVXLCDM\d]+", unidad))
+
+    return es_romano_valido or es_digito_valido or es_palabra_unidad or es_tema
 
 
 def extraer_filas_seguimiento(table) -> list:
