@@ -14,7 +14,7 @@ This tool automates the collection of data from `.docx` files (individual or ins
   <img src="img/interface_preview.png" width="300" alt="SGI Extractor GUI" />
 </p>
 <p align="center">
-  <img src="img/Excel-example.png" width="300" alt="Outcome" />
+  <img src="img/Excel-example.png" width="1200" alt="Outcome" />
 </p>
 
 ---
