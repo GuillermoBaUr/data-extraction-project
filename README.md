@@ -11,7 +11,10 @@ This tool automates the collection of data from `.docx` files (individual or ins
 ## 📸 Interface
 
 <p align="center">
-  <img src="img/interface_preview.png" width="600" alt="SGI Extractor GUI" />
+  <img src="img/interface_preview.png" width="300" alt="SGI Extractor GUI" />
+</p>
+<p align="center">
+  <img src="img/Excel-example.png" width="300" alt="Outcome" />
 </p>
 
 ---
@@ -63,8 +66,6 @@ The application uses a **Producer-Consumer** pattern to ensure the interface rem
 - **Python Dependencies**:
   ```bash
   pip install python-docx openpyxl pillow pywin32
-
-  ## 🛠 Troubleshooting
 
 *   **Word COM Errors**: Ensure Microsoft Word is installed and activated on your Windows machine if you need to process legacy `.doc` files.
 *   **Permission Denied**: Close any Excel files or Word documents that are currently open and being targeted by the script before starting the extraction.
