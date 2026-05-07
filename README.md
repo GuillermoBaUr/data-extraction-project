@@ -1,4 +1,4 @@
-# SGI Data Extractor
+# SGC Data Extractor
 
 A professional graphical interface and processing engine designed to extract academic metrics from **SGI "Course Management Tracking"** documents.
 
