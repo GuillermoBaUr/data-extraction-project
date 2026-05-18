@@ -72,9 +72,10 @@ The application uses a **Producer-Consumer** pattern to ensure the interface rem
 
 ---
 
-📬 **Contact**  
+📬 **Contact** 
 If you have any questions:  
-📧 [badillouribeguillermoca@gmail.com](mailto:badillouribeguillermoca@gmail.com)
+📧 [badillouribeguillermoca@gmail.com](mailto:badillouribeguillermoca@gmail.com)  
+🔗 [LinkedIn](https://www.linkedin.com/in/guillermo-badillo-uribe-382301228/)   
 
-📄 **License**  
+📄 **License** 
 This repository is licensed under the MIT License.
